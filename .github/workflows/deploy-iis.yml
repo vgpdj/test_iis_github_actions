@@ -1,0 +1,88 @@
+name: Deploy to IIS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-iis-production
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Package application
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Create application ZIP
+        run: git archive --format=zip --output=app.zip HEAD main.py templates pyproject.toml
+
+      - name: Upload application ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: iis-app
+          path: app.zip
+          if-no-files-found: error
+          retention-days: 7
+
+  deploy:
+    name: Deploy application
+    needs: build
+    runs-on: [self-hosted, Windows, iis]
+    timeout-minutes: 10
+    env:
+      IIS_APP_POOL_NAME: ${{ vars.IIS_APP_POOL_NAME }}
+      IIS_DEPLOY_PATH: 'E:\inetpub\wwwroot\test_iis_github_actions'
+    defaults:
+      run:
+        shell: powershell
+
+    steps:
+      - name: Download application ZIP
+        uses: actions/download-artifact@v4
+        with:
+          name: iis-app
+          path: ${{ runner.temp }}\iis-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Deploy files and recycle application pool
+        env:
+          ARTIFACT_PATH: ${{ runner.temp }}\iis-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Import-Module WebAdministration
+
+          if ([string]::IsNullOrWhiteSpace($env:IIS_APP_POOL_NAME)) {
+            throw 'Set the IIS_APP_POOL_NAME repository variable to the application pool name.'
+          }
+          if ((Get-WebAppPoolState -Name $env:IIS_APP_POOL_NAME).Value -ne 'Started') {
+            throw "Application pool '$env:IIS_APP_POOL_NAME' must be running before deployment."
+          }
+          if (-not (Test-Path -LiteralPath $env:IIS_DEPLOY_PATH -PathType Container)) {
+            throw "Deployment directory '$env:IIS_DEPLOY_PATH' does not exist."
+          }
+
+          try {
+            $source = Join-Path $env:ARTIFACT_PATH 'app'
+            Expand-Archive -LiteralPath (Join-Path $env:ARTIFACT_PATH 'app.zip') -DestinationPath $source
+
+            # Additive copy preserves server-only files; never mirror wwwroot.
+            & robocopy $source $env:IIS_DEPLOY_PATH /E /XJ /R:2 /W:2 /NP `
+              /XD .git .github .venv venv __pycache__ `
+              /XF web.config .env .env.* .gitignore README.md
+            $copyExitCode = $LASTEXITCODE
+            if ($copyExitCode -ge 8) {
+              throw "Robocopy failed with exit code $copyExitCode."
+            }
+            $global:LASTEXITCODE = 0
+            Restart-WebAppPool -Name $env:IIS_APP_POOL_NAME
+          }
+          finally {
+            Remove-Item -LiteralPath $env:ARTIFACT_PATH -Recurse -Force
+          }
