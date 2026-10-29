@@ -1,4 +1,5 @@
 import os
+import random
 from pathlib import Path
 
 from fastapi import APIRouter, FastAPI, Request
@@ -31,6 +32,15 @@ async def about(request: Request):
     return templates.TemplateResponse(
         name="about.html", context={"request": request}
     )
+
+
+@router.get("/random")
+async def random_data():
+    return {
+        "number": random.randint(1, 100),
+        "color": random.choice(["red", "green", "blue"]),
+        "active": random.choice([True, False]),
+    }
 
 
 app.include_router(router)
