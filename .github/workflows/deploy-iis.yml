@@ -35,6 +35,8 @@ jobs:
   deploy:
     name: Deploy application
     needs: build
+    environment:
+      name: production
     runs-on: [self-hosted]
     timeout-minutes: 10
     env:

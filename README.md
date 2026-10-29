@@ -53,8 +53,10 @@ The [IIS deployment workflow](.github/workflows/deploy-iis.yml) runs on pushes t
 
 1. **Build** on `ubuntu-latest`: package `main.py`, `templates`, and
    `pyproject.toml` from the commit into `app.zip` and upload it as an artifact.
-2. **Deploy**, with `needs: build`, on the self-hosted Windows IIS runner:
-   download and extract the ZIP, copy it into
+2. **Approval**: wait for a required reviewer of the `production` environment
+   to approve the deployment.
+3. **Deploy**, with `needs: build`, on the self-hosted Windows IIS runner:
+   after approval, download and extract the ZIP, copy it into
    `E:\inetpub\wwwroot\test_iis_github_actions`, and recycle the app's pool.
 
 The workflow does not create or reconfigure IIS sites.
@@ -72,6 +74,38 @@ The workflow does not create or reconfigure IIS sites.
 4. Ensure the target folder belongs to this app and `IIS_APP_POOL_NAME` is its
    dedicated pool. The workflow does not infer a site from the folder or validate
    its IIS mapping. Recycling a shared pool affects every app using it.
+5. Before enabling or running the updated workflow, go to **Settings >
+   Environments**, create or open `production`, and configure:
+   - Under **Deployment protection rules**, enable **Required reviewers** and
+     select the user or team allowed to approve deployments. Only one selected
+     reviewer needs to approve.
+   - Enable **Prevent self-review** if the person triggering the workflow must
+     not approve their own deployment.
+   - Disable **Allow administrators to bypass configured protection rules** if
+     approvals must also be enforced for administrators.
+   - Under **Deployment branches and tags**, choose **Selected branches and
+     tags** and add a branch rule for `main`. This also prevents a manually
+     triggered run from deploying another branch.
+
+The workflow's `environment: production` reference does not configure reviewers.
+If the environment is missing, GitHub can create it without protection rules,
+and deployment will not pause. Configure and save the environment in GitHub
+before relying on this approval gate. Availability of required reviewers depends
+on the repository visibility and GitHub plan; if the option is unavailable, this
+workflow alone cannot enforce approval.
+
+### Approving a deployment
+
+Push to `main` as usual. The build runs automatically; once it succeeds, the
+deployment waits for environment approval before starting work on the IIS runner.
+An authorized reviewer opens **Actions > Deploy to IIS > the workflow run >
+Review deployments**, selects `production`, and chooses **Approve and deploy**.
+Rejecting the deployment prevents the IIS deployment job from running.
+
+The same approval gate applies to **Run workflow** executions. This does not
+change who can push or merge into `main`; branch protection is separate. Users
+who can change workflows or environment settings can change this gate, so restrict
+those permissions if approval must not be bypassed.
 
 ### Deployment behavior
 
