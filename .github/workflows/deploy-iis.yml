@@ -35,7 +35,7 @@ jobs:
   deploy:
     name: Deploy application
     needs: build
-    runs-on: [self-hosted, Windows, X64, Repository]
+    runs-on: [self-hosted]
     timeout-minutes: 10
     env:
       IIS_APP_POOL_NAME: ${{ vars.IIS_APP_POOL_NAME }}

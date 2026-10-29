@@ -1,0 +1,16 @@
+name: Test Runner
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: [self-hosted, Windows, X64, Repository]
+
+    steps:
+      - name: Verify runner
+        shell: powershell
+        run: |
+          hostname
+          whoami
+          Get-Location
