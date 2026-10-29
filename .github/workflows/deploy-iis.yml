@@ -35,7 +35,7 @@ jobs:
   deploy:
     name: Deploy application
     needs: build
-    runs-on: [self-hosted, Windows, iis]
+    runs-on: [dkcdcsiting]
     timeout-minutes: 10
     env:
       IIS_APP_POOL_NAME: ${{ vars.IIS_APP_POOL_NAME }}
