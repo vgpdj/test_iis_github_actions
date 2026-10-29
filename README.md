@@ -3,7 +3,13 @@ CI/CD step for siting server
 
 ## Hello app
 
-A small FastAPI app that renders `templates/hello.html` at `/`.
+A small FastAPI app with two server-rendered pages:
+
+- `/`: the hello page, rendered from `templates/hello.html`.
+- `/about`: a different page describing the application stack, rendered from
+  `templates/about.html` using the shared hello layout.
+
+Both pages include navigation links to switch between them.
 
 With Python 3.10+ and [uv](https://docs.astral.sh/uv/) installed, run from
 the repository root:
@@ -13,6 +19,7 @@ uv run uvicorn main:app --reload
 ```
 
 Open http://127.0.0.1:8000/ to see “Hello, world!”.
+Open http://127.0.0.1:8000/about to see the about page.
 
 The template response passes `request` inside its context for compatibility with
 the older Starlette template API on the existing IIS Python environment.
@@ -27,6 +34,8 @@ uv run uvicorn main:app --reload
 ```
 
 The hello page is then available at http://127.0.0.1:8000/api/.
+The about page is available at http://127.0.0.1:8000/api/about, and navigation
+links automatically include the prefix.
 The default is an empty prefix, preserving `/`. A nonempty prefix must start
 with `/` and must not end with `/`; invalid values fail at startup.
 The API documentation stays at `/docs`.

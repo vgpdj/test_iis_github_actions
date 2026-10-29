@@ -1,0 +1,32 @@
+{% extends "hello.html" %}
+
+{% block title %}About | IIS deployment demo{% endblock %}
+
+{% block content %}
+<section aria-labelledby="about-heading">
+    <p class="eyebrow">Behind the application</p>
+    <h1 id="about-heading">Built to ship.</h1>
+    <p class="intro">A small application with a complete delivery path. This demo brings together Python, server-rendered pages, and automated deployment to IIS.</p>
+    <div class="badge"><span class="dot" aria-hidden="true"></span>One API. Two pages.</div>
+</section>
+<section class="pipeline" aria-labelledby="stack-heading">
+    <p class="eyebrow" id="stack-heading">The technology stack</p>
+    <div class="steps">
+        <article class="step">
+            <span class="number">01 / APPLICATION</span>
+            <h2>FastAPI</h2>
+            <p>Python routes handle each request and return an HTML page.</p>
+        </article>
+        <article class="step">
+            <span class="number">02 / TEMPLATES</span>
+            <h2>Jinja2</h2>
+            <p>Shared templates keep the navigation, colors, and responsive layout consistent across pages.</p>
+        </article>
+        <article class="step">
+            <span class="number">03 / DELIVERY</span>
+            <h2>GitHub Actions + IIS</h2>
+            <p>A build artifact carries the application to a Windows server for deployment to the existing IIS site.</p>
+        </article>
+    </div>
+</section>
+{% endblock %}

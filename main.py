@@ -26,6 +26,13 @@ async def hello(request: Request):
     )
 
 
+@router.get("/about", response_class=HTMLResponse)
+async def about(request: Request):
+    return templates.TemplateResponse(
+        name="about.html", context={"request": request}
+    )
+
+
 app.include_router(router)
 
 if __name__ == "__main__":

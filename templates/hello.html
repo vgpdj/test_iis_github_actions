@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light">
-    <title>Hello | IIS deployment demo</title>
+    <title>{% block title %}Hello | IIS deployment demo{% endblock %}</title>
     <style>
         :root {
             font-family: "Segoe UI", Arial, sans-serif;
@@ -38,6 +38,9 @@
             text-transform: uppercase;
         }
         .label { color: #64746b; }
+        nav { display: flex; flex-wrap: wrap; gap: 20px; }
+        nav a { color: #1f332b; text-underline-offset: 4px; }
+        nav a:hover { color: #b45335; }
         main { padding: 84px 0 56px; }
         .hero {
             display: grid;
@@ -100,9 +103,13 @@
     <div class="page">
         <header>
             <div class="brand"><span class="mark" aria-hidden="true">&gt;_</span> Ship / IIS</div>
-            <span class="label">Deployment demo</span>
+            <nav aria-label="Main navigation">
+                <a href="{{ request.url_for('hello') }}">Home</a>
+                <a href="{{ request.url_for('about') }}">About</a>
+            </nav>
         </header>
         <main>
+            {% block content %}
             <section class="hero" aria-labelledby="greeting">
                 <div>
                     <p class="eyebrow">Small app. Real delivery.</p>
@@ -139,6 +146,7 @@
                     </article>
                 </div>
             </section>
+            {% endblock %}
         </main>
         <footer><span>FastAPI + IIS + GitHub Actions</span><span>Built to keep things simple.</span></footer>
     </div>
